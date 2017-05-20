@@ -1,0 +1,59 @@
+---
+- name: Copy database dump file
+  copy:
+    src: '{{ dumps_dir }}/wordpress.sql.gz'
+    dest: /tmp
+
+- name: Restore database
+  mysql_db:
+    name: '{{ wp_db_name }}'
+    state: import
+    target: /tmp/wordpress.sql.gz
+
+- name: Add mysql user
+  mysql_user:
+    name: '{{ wp_db_user }}'
+    password: '{{ wp_db_password }}'
+    priv: 'wordpress.*:ALL'
+    state: present
+
+- name: Create wordpress user
+  user:
+    name: '{{ wp_root_user }}'
+    home: '{{ wp_root }}'
+    groups: '{{ wp_root_group }}'
+
+- name: Extract wordpress files
+  unarchive:
+    src: '{{ dumps_dir }}/wordpress.tar.gz'
+    dest: '{{ wp_root }}'
+    owner: '{{ wp_root_user }}'
+    group: '{{ wp_root_group }}'
+    mode: u=rw,g=r,o=
+
+- name: Upload folder
+  file:
+    path: '{{ wp_root }}/wp-content/uploads'
+    state: directory
+    owner: '{{ wp_uploads_user }}'
+    group: '{{ wp_uploads_group }}'
+    mode: u=rw,g=rw,o=
+    recurse: yes
+
+- name: Set directories executable
+  file:
+    path: '{{ wp_root }}'
+    mode: u+X,g+X
+    recurse: yes
+
+- name: Copy wp-config.php
+  template:
+    src: wp-config.php.j2
+    dest: '{{ wp_root }}/wp-config.php'
+    owner: '{{ wp_root_user }}'
+    group: '{{ wp_root_group }}'
+    mode: u=rw,g=r,o=
+
+- name: Set options
+  shell: mysql wordpress -e "UPDATE avwp_options SET option_value = '{{ item.value }}' WHERE option_name = '{{ item.key }}';"
+  with_dict: '{{ wp_options }}'

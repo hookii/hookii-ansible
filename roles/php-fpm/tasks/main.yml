@@ -1,0 +1,21 @@
+---
+- name: Install PHP-FPM
+  apt:
+    name: '{{ item }}'
+    state: present
+  with_items:
+    - php
+    - php-cli
+    - php-common
+    - php-fpm
+    - php-gd
+    - php-json
+    - php-mcrypt
+    - php-mysql
+    - php-redis
+
+- name: Start PHP-FPM
+  service:
+    name: php7.0-fpm
+    state: started
+    enabled: yes

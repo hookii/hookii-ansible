@@ -1,0 +1,15 @@
+---
+- name: Install MariaDB
+  apt:
+    name: '{{ item }}'
+    state: present
+    update_cache: yes
+  with_items:
+    - mariadb-server
+    - python3-mysqldb
+
+- name: Start MariaDB
+  service:
+    name: mysql
+    state: started
+    enabled: yes

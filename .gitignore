@@ -1,0 +1,5 @@
+/dumps/
+.vagrant/
+.vault_pass.txt
+*.retry
+*.log

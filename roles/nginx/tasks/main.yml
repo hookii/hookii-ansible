@@ -1,0 +1,43 @@
+---
+- name: Add Nginx PPA
+  apt_repository:
+    repo: 'ppa:nginx/stable'
+    state: present
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Install Nginx module chache-purge
+  apt:
+    name: libnginx-mod-http-cache-purge
+    state: present
+    update_cache: yes
+  notify: restart nginx
+
+- name: Copy Nginx configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify: reload nginx
+
+- name: Copy Nginx site configuration
+  template:
+    src: hookii.conf.j2
+    dest: /etc/nginx/sites-available/hookii
+  notify: reload nginx
+
+- name: Disable default site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: reload nginx
+
+- name: Enable hookii site
+  file: 
+    src: /etc/nginx/sites-available/hookii
+    dest: /etc/nginx/sites-enabled/hookii
+    state: link
+  notify: reload nginx

@@ -1,0 +1,21 @@
+---
+server_hostname: www.hookii.it
+
+wp_root: /var/www/wordpress
+wp_root_user: wordpress
+wp_root_group: www-data
+wp_uploads_user: www-data
+wp_uploads_group: www-data
+wp_db_name: wordpress
+wp_db_user: wordpress
+wp_db_password: '{{ vault_wp_db_password }}'
+
+wp_options:
+  home: http://www.hookii.it
+  siteurl: http://www.hookii.it
+  blogname: hookii
+  admin_email: wordpress@hookii.org
+
+dumps_dir: ./dumps
+wp_db_old_user: wordpressuser
+wp_db_old_password: '{{ vault_wp_db_old_password }}'

@@ -1,0 +1,37 @@
+---
+- name: Dump Wordpress
+  hosts: all
+  become: yes
+  become_method: sudo
+
+  tasks:
+    - name: Dump Wordpress database
+      mysql_db:
+        state: dump
+        name: wordpress
+        target: /tmp/wordpress.sql.gz
+        login_user: '{{ wp_db_old_user }}'
+        login_password: '{{ wp_db_old_password }}'
+
+    - name: Fetch MySQL dump
+      fetch:
+        src: /tmp/wordpress.sql.gz
+        dest: '{{ dumps_dir }}'
+        flat: yes
+      become: false
+
+    - name: Archive files
+      shell: >
+        tar -caf /tmp/wordpress.tar.gz .
+        --exclude=wp-content/uploads
+        --exclude=wp-content/updraft
+        --exclude=wp-snapshots
+      args:
+        chdir: /var/www
+
+    - name: Fetch Wordpress archive
+      fetch:
+        src: /tmp/wordpress.tar.gz
+        dest: '{{ dumps_dir }}'
+        flat: yes
+      become: false

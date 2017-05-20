@@ -1,0 +1,7 @@
+---
+server_hostname: localhost
+
+wp_options:
+  home: http://localhost:8080
+  siteurl: http://localhost:8080
+  blogname: hookii (dev)
