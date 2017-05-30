@@ -1,3 +1,4 @@
+#jinja2: trim_blocks: "true", lstrip_blocks: "true"
 upstream php {
   server unix:/run/php/php7.0-fpm.sock;
 }
@@ -55,6 +56,19 @@ server {
     location ~ /purge(/.*) {
         fastcgi_cache_purge WORDPRESS "$scheme$request_method$host$1";
     }
+
+    {% if proxy_pass_uploads is defined %}
+    location ^~ /wp-content/uploads/ {
+        try_files $uri @remote_uploads;
+    }
+
+    location @remote_uploads {
+        {% if proxy_pass_auth is defined %}
+        proxy_set_header Authorization "{{ proxy_pass_auth }}";
+        {% endif %}
+        proxy_pass http://stage.hookii.it;
+    }
+    {% endif %}
 
     location ~* \.(?:css|js|ico|jpe?g|png|gif)$ {
         expires 1d;

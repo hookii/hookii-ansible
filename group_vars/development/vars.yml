@@ -1,6 +1,9 @@
 ---
 server_hostname: localhost
 
+proxy_pass_uploads: http://stage.hookii.it
+proxy_pass_auth: '{{ vault_proxy_pass_auth }}'
+
 wp_options:
   home: http://localhost:8080
   siteurl: http://localhost:8080
