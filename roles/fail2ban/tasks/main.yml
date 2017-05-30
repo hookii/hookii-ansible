@@ -1,0 +1,25 @@
+---
+- name: Install Fail2ban
+  apt:
+    name: fail2ban
+    state: present
+    update_cache: yes
+
+- name: Copy filters
+  copy:
+    src: "{{ item }}"
+    dest: /etc/fail2ban/filter.d/
+    owner: root
+    mode: 644
+  with_fileglob:
+    - filter.d/*
+
+- name: Copy jails
+  copy:
+    src: "{{ item }}"
+    dest: /etc/fail2ban/jail.d/
+    owner: root
+    mode: 644
+  with_fileglob:
+    - jail.d/*
+  notify: restart fail2ban
