@@ -57,3 +57,30 @@
 - name: Set options
   shell: mysql wordpress -e "UPDATE avwp_options SET option_value = '{{ item.value }}' WHERE option_name = '{{ item.key }}';"
   with_dict: '{{ wp_options }}'
+
+- name: Install WP-CLI
+  get_url:
+    url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    dest: '{{ wp_root }}/wp'
+    force: true
+    owner: wordpress
+    group: www-data
+    mode: 0750
+
+- name: Update Wordpress
+  command: ./wp core update
+  become_user: '{{ wp_root_user }}'
+  args:
+    chdir: '{{ wp_root }}'
+
+- name: Update Wordpress database
+  command: ./wp core update-db
+  become_user: '{{ wp_root_user }}'
+  args:
+    chdir: '{{ wp_root }}'
+
+- name: Update Wordpress plugins
+  command: ./wp plugin update --all
+  become_user: '{{ wp_root_user }}'
+  args:
+    chdir: '{{ wp_root }}'
