@@ -1,0 +1,355 @@
+<?php
+// Exit if accessed directly
+if ( !defined('ABSPATH')) exit;
+
+/* Add custom functions below */
+
+add_filter('widget_text', 'do_shortcode');
+
+
+/* bar */
+
+add_action('bar_event', 'bar_hourly');
+
+function bar_activation() {
+	if ( !wp_next_scheduled( 'bar_event' ) ) {
+		wp_schedule_event( strtotime( 'today 2:00' ), 'daily', 'bar_event');
+	}
+}
+add_action('wp', 'bar_activation');
+
+function bar_hourly() {
+	$domani = new DateTime('tomorrow');
+	$new_bar = "bar-".$domani->format('y-md');
+	$bar_query = new WP_Query(array('name' => $new_bar));
+	if ( $bar_query->have_posts() ) {  } else {
+		$my_post = array(
+			'post_title' => 'Bar Collante / '.$domani->format('j.m.Y'),
+			'post_name' => $new_bar,
+			'post_content' => 'Uno spazio per fare quattro chiacchiere. <br><br><div class="avviso-bar">Vuoi parlare subito di un argomento? Credi che ci sia una breaking news? Non hai voglia di segnalare un articolo, perché non "vale" una segnalazione, ma credi che comunque possa sviluppare una discussione? Fai una <a href="/re-post/">segnalazione rapida</a>! Per maggiori informazioni, commenti e suggerimenti puoi leggere e scrivere <a href="//lab.hookii.it/t/segnalazioni-rapide/336" target="_blank">al lab</a>.</div>',
+			'post_status' => 'future',
+			'post_date' => $domani->format('Y-m-d').' 5:00',
+			'post_date_gmt' => $domani->format('Y-m-d').' 4:00',
+			'post_category' => array(get_cat_ID('Bar')),
+			'post_author' => '3009' // user 'hookii'
+		);
+		wp_insert_post( $my_post );
+	}
+}
+
+
+add_filter( 'cron_schedules', 'myprefix_add_intervals' );
+function myprefix_add_intervals( $schedules ) {
+	$schedules['weekly'] = array(
+		'interval' => 604800, // 1 week in seconds
+		'display'  => __( 'Once Weekly' ),
+	);
+	//$schedules['monthly'] = array(
+	//	'interval' => 2635200, // 30,5 days in seconds
+	//	'display' => __('Once a month')
+	//);
+
+    return $schedules;
+}
+
+/* we arti&eventi * /
+
+add_action('we_event', 'we_monthly');
+
+function we_activation() {
+	if ( !wp_next_scheduled( 'we_event' ) ) {
+		wp_schedule_event( strtotime( 'today 2:00' ), 'monthly', 'we_event');
+	}
+}
+add_action('wp', 'we_activation');
+
+function we_monthly() {
+	$domani = new DateTime('today');
+	$new_we = "we-".$domani->format('y-md');
+	$we_query = new WP_Query(array('name' => $new_we));
+	if ( $we_query->have_posts() ) {  } else {
+		$my_post = array(
+			'post_title' => 'Arte & Eventi / '.$domani->format('j.m.Y'),
+			'post_name' => $new_we,
+			'post_content' => 'Un posto dove raccontare di mostre, consigli per letture, arte e eventi culturali, mese per mese.',
+			'post_status' => 'future',
+			'post_date' => $domani->format('Y-m-d').' 22:30',
+			'post_date_gmt' => $domani->format('Y-m-d').' 21:30',
+			'post_category' => array(get_cat_ID('Cultura')),
+			'tax_input' => array('community')
+		);
+		$post_id = wp_insert_post( $my_post );
+		wp_set_object_terms($post_id, 'consigli', 'community');
+	}
+}
+
+/* musica */
+
+add_action('musica_event', 'musica_weekly');
+
+function musica_activation() {
+    if ( !wp_next_scheduled( 'musica_event' ) ) {
+        wp_schedule_event( strtotime( 'today 2:00' ), 'weekly', 'musica_event');
+    }
+}
+add_action('wp', 'musica_activation');
+
+function musica_weekly() {
+    $domani = new DateTime('today');
+    $new_musica = "musica-".$domani->format('y-md');
+    $musica_query = new WP_Query(array('name' => $new_musica));
+    if ( $musica_query->have_posts() ) {  } else {
+        $my_post = array(
+            'post_title' => 'G/audio / '.$domani->format('j.m.Y'),
+            'post_name' => $new_musica,
+            'post_content' => 'Uno spazio per i vostri consigli musicali.',
+            'post_status' => 'future',
+            'post_date' => $domani->format('Y-m-d').' 5:00',
+            'post_date_gmt' => $domani->format('Y-m-d').' 4:00',
+            'post_category' => array(get_cat_ID('Musica')),
+            'tax_input' => array('community')
+        );
+        $post_id = wp_insert_post( $my_post );
+        wp_set_object_terms($post_id, 'gaudio', 'community');
+    }
+}
+
+/**
+ * Plugin User Submitted Posts.
+ * Filtro per impostare una segnalazione come 'pending' in caso di segnalazione veloce (checkbox del form personalizzato).
+ */
+add_filter('usp_post_data', 'usp_post_data_filter', 10, 1);
+function usp_post_data_filter($postData){
+    if (isset($_POST['user-submitted-quick'])) {
+        $postData['post_status'] = 'pending';
+    }
+    return $postData;
+}
+
+/**
+ * Plugin User Submitted Posts.
+ * Filtro per aggiungere la categoria 'Rapide' in caso di segnalazione veloce (checkbox del form personalizzato); categoria 'Feat' negli altri$
+ */
+add_filter('usp_new_post', 'usp_new_post_filter', 10, 1);
+function usp_new_post_filter($newPost){
+    if ($newPost['id'] && isset($_POST['user-submitted-quick'])) {
+        $category_id = get_cat_ID('Rapide'); /* category name */
+        $post_id = $newPost['id'];
+        $tags = wp_set_post_terms( $post_id, array('rapida'), post_tag, true);
+        if ($category_id)
+            wp_set_post_categories($post_id, array($category_id), true);
+    }
+    else {
+        $category_id = get_cat_ID('Feat');
+        $post_id = $newPost['id'];
+       if ($category_id)
+            wp_set_post_categories($post_id, array($category_id), true);
+    }
+    return $newPost;
+}
+
+/**
+ * Plugin User Submitted Posts.
+ * Filtro per cambiare l'oggetto alla mail di notifica.
+ */
+add_filter('usp_mail_subject', 'usp_mail_subject_filter', 10, 1);
+function usp_mail_subject_filter($subject) {
+    $author = '';
+    if (isset($_POST['user-submitted-name']))
+        $author   = stripslashes(sanitize_text_field($_POST['user-submitted-name']));
+
+    $title = '';
+    if (isset($_POST['user-submitted-title']))
+        $title = stripslashes(sanitize_text_field($_POST['user-submitted-title']));
+
+    $category = '';
+    if (isset($_POST['user-submitted-category'])) {
+        $cat_id = intval($_POST['user-submitted-category']);
+        $cat_name = get_the_category_by_ID($cat_id);
+        if (!is_wp_error($category))
+            $category = $cat_name;
+    }
+
+    $quick = '';
+    if (isset($_POST['user-submitted-quick']))
+        $quick = true;
+    else $quick = '0';
+
+    return "Autore: $author | Titolo: $title | Cat: $category | Rapida: $quick"; /* subject string */
+}
+
+/**
+ * Plugin User Submitted Posts.
+ * Filtro per cambiare il testo alla mail di notifica.
+ */
+add_filter('usp_mail_message', 'usp_mail_message_filter', 10, 1);
+function usp_mail_message_filter($message) {
+    if (isset($_POST['user-submitted-content']))
+        $message .= strip_tags($_POST['user-submitted-content']);
+
+    return $message;
+}
+
+/* Tassonomie */
+
+/* Speciali */
+
+add_action('init', 'create_special', 0);
+
+function create_special() {
+    $labels = array(
+        'name' => _x('Speciali', 'taxonomy general name'),
+        'singular_name' => _x('Speciale', 'taxonomy singular name'),
+        'search_items' => __('Ricerca speciale'),
+        'all items' => __('Tutti gli speciali'),
+        'parent_item' => null,
+        'parent_item_colon' => null,
+        'edit_item' => __('Modifica speciale'),
+        'update_item' => __('Aggiorna speciale'),
+        'add_new_item' => __('Aggiungi speciale'),
+        'new_item_name' => __('Nuovo speciale'),
+        'menu_name' => __('Speciali'),
+    );
+
+    $args = array(
+        'hierarchical' => true,
+        'labels' => $labels,
+        'show_ui' => true,
+        'show_admin_column' => true,
+        'query_var' => true,
+        'rewrite' => true,
+    );
+
+    register_taxonomy('speciali', 'post', $args);
+}
+
+/* Community */
+
+add_action('init', 'create_community', 0);
+
+function create_community() {
+    $labels = array(
+        'name' => _x('Community', 'taxonomy general name'),
+        'singular_name' => _x('Community', 'taxonomy singular name'),
+        'search_items' => __('Ricerca cat community'),
+        'all items' => __('Tutte le cat community'),
+        'parent_item' => null,
+        'parent_item_colon' => null,
+        'edit_item' => __('Modifica cat community'),
+        'update_item' => __('Aggiorna cat community'),
+        'add_new_item' => __('Aggiungi cat community'),
+        'new_item_name' => __('Nuova cat community'),
+        'menu_name' => __('Community'),
+    );
+
+    $args = array(
+        'hierarchical' => true,
+        'labels' => $labels,
+        'show_ui' => true,
+        'show_admin_column' => true,
+        'query_var' => true,
+        'rewrite' => true,
+    );
+
+    register_taxonomy('community', 'post', $args);
+}
+
+/**
+ * Codice per il redirect all'ultimo post di bar, g/audio e la scoperta tramite i percorsi
+ *   /bar-menu
+ *   /gaudio-menu
+ *   /consigli-menu
+ *
+ *  Salvare le impostazioni dei permalink quando si modificano chiamate alla funzione add_rewrite_rule().
+ */
+
+add_action( 'init', 'hookii_rewrite_rules_latest' );
+
+function hookii_rewrite_rules_latest(){
+    add_rewrite_rule( '(bar)-menu$', 'index.php?category_name=$matches[1]&latest=true', 'top' );
+    add_rewrite_rule( 'community/(gaudio|consigli)/latest$', 'index.php?community=$matches[1]&latest=true', 'top' );
+}
+
+
+add_filter( 'query_vars', 'hookii_query_vars_latest' );
+
+function hookii_query_vars_latest( $vars ) {
+    $vars[] = 'latest';
+    return $vars;
+}
+
+
+add_action( 'parse_request', 'hookii_parse_request_latest' );
+
+function hookii_parse_request_latest( $wp ) {
+    if( isset( $wp->query_vars['latest'] ) ) {
+
+        $wp->query_vars['order'] = 'desc';
+        $wp->query_vars['posts_per_page'] = 1;
+
+        $posts = get_posts( $wp->query_vars );
+        foreach ( $posts as $p ) {
+            $permalink = get_permalink( $p->ID );
+            wp_redirect( $permalink , 302 );
+            exit;
+        }
+    }
+
+    return $wp;
+}
+
+
+/**
+ * Funzioni per sostituire il plugin di Disqus e mantenere il vecchio account nei vecchi post.
+ */
+
+function hookii_postid_to_shortname($id) {
+    return $id <= {{ legacy_account_last_id }} ? '{{ disqus_legacy_shortname }}' : '{{ disqus_new_shortname }}';
+}
+
+add_filter( 'found_posts', 'hookii_add_disqus_countjs', 10, 2 );
+function hookii_add_disqus_countjs( $found_posts, $query ) {
+    if ( count($query->posts) > 0 ) {
+        $first_post = $query->posts[0];
+        $first_post_id = is_object( $first_post ) ? $first_post->ID : $first_post;
+        $shortname = hookii_postid_to_shortname( $first_post_id );
+    }
+
+    add_action( 'wp_footer', function() use ($shortname) { 
+        ?>
+        <script type="text/javascript">
+        // <![CDATA[
+        var disqus_shortname = '<?php echo $shortname;?>';
+        (function () {
+            var nodes = document.getElementsByTagName('span');
+            for (var i = 0, url; i < nodes.length; i++) {
+                if (nodes[i].className.indexOf('dsq-postid') != -1) {
+                    nodes[i].parentNode.setAttribute('data-disqus-identifier', nodes[i].getAttribute('data-dsqidentifier'));
+                    url = nodes[i].parentNode.href.split('#', 1);
+                    if (url.length == 1) { url = url[0]; }
+                    else { url = url[1]; }
+                    nodes[i].parentNode.href = url + '#disqus_thread';
+                }
+            }
+            var s = document.createElement('script'); 
+            s.async = true;
+            s.type = 'text/javascript';
+            s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+            (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+        }());
+        // ]]>
+        </script>
+        <?php
+    });
+}
+
+add_filter('comments_number', 'hookii_comments_number');
+function hookii_comments_number($comment_text) {
+    global $post;
+
+    if ( true ) {
+        return '<span class="dsq-postid" data-dsqidentifier="'.esc_attr($post->ID . ' ' . $post->guid).'">'.$comment_text.'</span>';
+    } else {
+        return $comment_text;
+    }
+}

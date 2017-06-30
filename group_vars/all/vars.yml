@@ -16,6 +16,10 @@ wp_options:
   blogname: hookii
   admin_email: wordpress@hookii.org
 
+legacy_account_last_id: 48546
+disqus_legacy_shortname: icommentidelpost
+disqus_new_shortname: hookii
+
 dumps_dir: ./dumps
 wp_db_old_user: wordpressuser
 wp_db_old_password: '{{ vault_wp_db_old_password }}'

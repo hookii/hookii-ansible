@@ -1,0 +1,30 @@
+<?php
+$shortname = hookii_postid_to_shortname( $post->ID );
+$url = get_permalink();
+$identifier = $post->ID . ' ' . $post->guid;
+
+$DISQUS_ALLOWED_HTML = '<b><u><i><h1><h2><h3><code><blockquote><br><hr>';
+$title = get_the_title( $post );
+$title = json_encode( strip_tags( $title, $DISQUS_ALLOWED_HTML ) );
+?>
+
+<?php if (comments_open() ) : ?>
+<div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+        this.page.url = '<?php echo $url; ?>';
+        this.page.identifier = '<?php echo $identifier ?>';
+        this.page.title = '<?php echo $title; ?>';
+    };
+
+    (function() {
+        var d = document, s = d.createElement('script');
+
+        s.src = '//<?php echo $shortname; ?>.disqus.com/embed.js';
+
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<?php endif; // comments_open ?>

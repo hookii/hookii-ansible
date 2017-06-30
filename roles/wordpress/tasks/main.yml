@@ -54,6 +54,22 @@
     group: '{{ wp_root_group }}'
     mode: u=rw,g=r,o=
 
+- name: Copy comments.php
+  template:
+    src: comments.php.j2
+    dest: '{{ wp_root }}/wp-content/themes/compost/comments.php'
+    owner: '{{ wp_root_user }}'
+    group: '{{ wp_root_group }}'
+    mode: u=rw,g=r,o=
+
+- name: Copy functions.php
+  template:
+    src: functions.php.j2
+    dest: '{{ wp_root }}/wp-content/themes/compost/functions.php'
+    owner: '{{ wp_root_user }}'
+    group: '{{ wp_root_group }}'
+    mode: u=rw,g=r,o=
+
 - name: Set options
   shell: mysql wordpress -e "UPDATE avwp_options SET option_value = '{{ item.value }}' WHERE option_name = '{{ item.key }}';"
   with_dict: '{{ wp_options }}'
@@ -66,6 +82,12 @@
     owner: wordpress
     group: www-data
     mode: 0750
+
+- name: Disable disqus plugin
+  command: ./wp plugin deactivate disqus-comment-system
+  become_user: '{{ wp_root_user }}'
+  args:
+    chdir: '{{ wp_root }}'
 
 - name: Update Wordpress
   command: ./wp core update
