@@ -10,6 +10,7 @@
     - php-fpm
     - php-gd
     - php-json
+    - php-xml
     - php-mcrypt
     - php-mysql
     - php-redis

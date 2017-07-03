@@ -81,13 +81,29 @@
     force: true
     owner: wordpress
     group: www-data
-    mode: 0750
+    mode: 0700
 
 - name: Disable disqus plugin
   command: ./wp plugin deactivate disqus-comment-system
   become_user: '{{ wp_root_user }}'
   args:
     chdir: '{{ wp_root }}'
+
+- name: Crontab for wordpress scheduled jobs
+  cron:
+    name: 'wordpress jobs'
+    minute: '*/15'
+    job: './wp cron event run --due-now'
+  become: true
+  become_user: '{{ wp_root_user }}'
+
+- name: Crontab for minor updates
+  cron:
+    name: 'wordpress updates'
+    hour: '03'
+    job: './wp core update --minor && ./wp core update-db; ./wp cli update --patch --yes'
+  become: true
+  become_user: '{{ wp_root_user }}'
 
 - name: Update Wordpress
   command: ./wp core update
