@@ -70,9 +70,14 @@
     group: '{{ wp_root_group }}'
     mode: u=rw,g=r,o=
 
+- name: Copy User Submitted Posts custom form
+  copy:
+    src: files/usp
+    dest: '{{ wp_root }}/wp-content/themes/compost/'
+
 - name: Set options
   shell: mysql wordpress -e "UPDATE avwp_options SET option_value = '{{ item.value }}' WHERE option_name = '{{ item.key }}';"
-  with_dict: '{{ wp_options }}'
+  with_dict: '{{ wp_options_default | combine(wp_options) }}'
 
 - name: Install WP-CLI
   get_url:
