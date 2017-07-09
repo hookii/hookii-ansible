@@ -1,0 +1,22 @@
+---
+- name: Update all packages to the latest version
+  apt:
+    upgrade: dist
+    update_cache: yes
+
+- name: Set timezone
+  timezone:
+    name: Europe/Rome
+
+- name: Create users
+  user:
+    name: '{{ item }}'
+    shell: /bin/bash
+  with_items: '{{ users }}'
+
+- name: Add ssh keys
+  authorized_key:
+    user: '{{ item }}'
+    key: '{{ lookup("file", "{{ item }}.pub") }}'
+  with_items: '{{ users }}'
+

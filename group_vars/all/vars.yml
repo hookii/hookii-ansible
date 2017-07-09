@@ -1,4 +1,8 @@
 ---
+users:
+  - jacopo
+  - piero
+
 server_hostname: www.hookii.it
 
 wp_root: /var/www/wordpress
