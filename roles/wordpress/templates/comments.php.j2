@@ -14,7 +14,7 @@ $title = json_encode( strip_tags( $title, $DISQUS_ALLOWED_HTML ) );
     var disqus_config = function () {
         this.page.url = '<?php echo $url; ?>';
         this.page.identifier = '<?php echo $identifier ?>';
-        this.page.title = '<?php echo $title; ?>';
+        this.page.title = <?php echo $title; ?>;
     };
 
     (function() {
