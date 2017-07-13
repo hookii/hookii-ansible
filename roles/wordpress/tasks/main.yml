@@ -1,8 +1,23 @@
 ---
-- name: Copy database dump file
-  copy:
-    src: '{{ dumps_dir }}/wordpress.sql.gz'
-    dest: /tmp
+
+- name: Create wordpress user
+  user:
+    name: '{{ wp_root_user }}'
+    home: '{{ wp_root }}'
+    groups: '{{ wp_root_group }}'
+    shell: /bin/bash
+
+
+# get wordpress files and db dump
+
+- include: wp-from-local-archives.yml
+  when: hostvars['source'] is undefined
+
+- include: wp-from-remote-source.yml
+  when: hostvars['source'] is defined
+
+
+# database
 
 - name: Restore database
   mysql_db:
@@ -17,34 +32,8 @@
     priv: 'wordpress.*:ALL'
     state: present
 
-- name: Create wordpress user
-  user:
-    name: '{{ wp_root_user }}'
-    home: '{{ wp_root }}'
-    groups: '{{ wp_root_group }}'
 
-- name: Extract wordpress files
-  unarchive:
-    src: '{{ dumps_dir }}/wordpress.tar.gz'
-    dest: '{{ wp_root }}'
-    owner: '{{ wp_root_user }}'
-    group: '{{ wp_root_group }}'
-    mode: u=rw,g=r,o=
-
-- name: Upload folder
-  file:
-    path: '{{ wp_root }}/wp-content/uploads'
-    state: directory
-    owner: '{{ wp_uploads_user }}'
-    group: '{{ wp_uploads_group }}'
-    mode: u=rw,g=rw,o=
-    recurse: yes
-
-- name: Set directories executable
-  file:
-    path: '{{ wp_root }}'
-    mode: u+X,g+X
-    recurse: yes
+# copy templates and custom files
 
 - name: Copy wp-config.php
   template:
@@ -75,9 +64,34 @@
     src: files/usp
     dest: '{{ wp_root }}/wp-content/themes/compost/'
 
-- name: Set options
-  shell: mysql wordpress -e "UPDATE avwp_options SET option_value = '{{ item.value }}' WHERE option_name = '{{ item.key }}';"
-  with_dict: '{{ wp_options_default | combine(wp_options) }}'
+
+# permissions
+
+- name: Permissions for Wordpress root directory content
+  file:
+    dest: '{{ wp_root }}'
+    owner: '{{ wp_root_user }}'
+    group: '{{ wp_root_group }}'
+    mode: u=rwx,g=rx,o=
+    recurse: yes
+
+- name: Permissions for uploads directory content
+  file:
+    path: '{{ wp_root }}/wp-content/uploads'
+    state: directory
+    owner: '{{ wp_uploads_user }}'
+    group: '{{ wp_uploads_group }}'
+    mode: u=rw,g=rw,o=
+    recurse: yes
+
+- name: Exec permission for directories
+  file:
+    path: '{{ wp_root }}'
+    mode: u+X,g+X
+    recurse: yes
+
+
+# wp-cli & options
 
 - name: Install WP-CLI
   get_url:
@@ -88,16 +102,33 @@
     group: www-data
     mode: 0700
 
+- name: Set options
+  command: ./wp option update {{ item.key }} '{{ item.value }}'
+  with_dict: '{{ wp_options_default | combine(wp_options|default({})) }}'
+  become_user: '{{ wp_root_user }}'
+  args:
+    chdir: '{{ wp_root }}'
+
+- name: Set JSON options
+  command: ./wp option update {{ item.key }} '{{ item.value }}' --format=json
+  with_dict: '{{ wp_options_json_default | combine(wp_options_json|default({})) }}'
+  become_user: '{{ wp_root_user }}'
+  args:
+    chdir: '{{ wp_root }}'
+
 - name: Disable disqus plugin
   command: ./wp plugin deactivate disqus-comment-system
   become_user: '{{ wp_root_user }}'
   args:
     chdir: '{{ wp_root }}'
 
+
+# cron jobs
+
 - name: Crontab for wordpress scheduled jobs
   cron:
     name: 'wordpress jobs'
-    minute: '*/15'
+    minute: '1-59/10'
     job: './wp cron event run --due-now'
   become: true
   become_user: '{{ wp_root_user }}'
@@ -109,6 +140,9 @@
     job: './wp core update --minor && ./wp core update-db; ./wp cli update --patch --yes'
   become: true
   become_user: '{{ wp_root_user }}'
+
+
+# updates
 
 - name: Update Wordpress
   command: ./wp core update

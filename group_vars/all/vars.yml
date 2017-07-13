@@ -31,5 +31,6 @@ disqus_legacy_shortname: icommentidelpost
 disqus_new_shortname: hookii
 
 dumps_dir: ./dumps
+wp_old_root: /var/www
 wp_db_old_user: wordpressuser
 wp_db_old_password: '{{ vault_wp_db_old_password }}'

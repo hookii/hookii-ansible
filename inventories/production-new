@@ -1,0 +1,4 @@
+source ansible_host=hookii.it
+
+[production]
+destination ansible_host=178.62.252.35 ansible_user=root ansible_python_interpreter=python3

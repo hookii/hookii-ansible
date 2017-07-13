@@ -1,0 +1,10 @@
+---
+- name: Extract wordpress files
+  unarchive:
+    src: '{{ dumps_dir }}/wordpress.tar.gz'
+    dest: '{{ wp_root }}'
+
+- name: Copy database dump file
+  copy:
+    src: '{{ dumps_dir }}/wordpress.sql.gz'
+    dest: /tmp
