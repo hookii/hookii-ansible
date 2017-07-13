@@ -9,6 +9,12 @@ fastcgi_cache_use_stale error timeout invalid_header http_500;
 fastcgi_ignore_headers Cache-Control Expires Set-Cookie;
 
 server {
+    listen 80;
+    server_name {{ legacy_hostname }};
+    return 301 http://{{ server_hostname }}$request_uri;
+}
+
+server {
 
     listen 80;
 

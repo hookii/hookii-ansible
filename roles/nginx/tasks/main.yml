@@ -10,7 +10,7 @@
     state: present
     update_cache: yes
 
-- name: Install Nginx module chache-purge
+- name: Install Nginx module cache-purge
   apt:
     name: libnginx-mod-http-cache-purge
     state: present
