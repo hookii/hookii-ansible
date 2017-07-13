@@ -1,7 +1,6 @@
 ---
-server_hostname: stage.hookii.it
+server_hostname: stage.hookii.org
+legacy_hostname: stage.hookii.it
 
 wp_options:
-  home: http://stage.hookii.it
-  siteurl: http://stage.hookii.it
   blogname: hookii (stage)

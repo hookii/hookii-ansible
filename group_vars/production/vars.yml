@@ -1,7 +1,2 @@
 ---
-server_hostname: www.hookii.it
 
-wp_options:
-  home: http://www.hookii.it
-  siteurl: http://www.hookii.it
-  blogname: hookii

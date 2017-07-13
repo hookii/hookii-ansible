@@ -3,7 +3,8 @@ users:
   - jacopo
   - piero
 
-server_hostname: www.hookii.it
+server_hostname: hookii.org
+legacy_hostname: www.hookii.org www.hookii.it hookii.it
 
 wp_root: /var/www/wordpress
 wp_root_user: wordpress
@@ -15,13 +16,13 @@ wp_db_user: wordpress
 wp_db_password: '{{ vault_wp_db_password }}'
 
 wp_options_default:
-  home: http://www.hookii.it
-  siteurl: http://www.hookii.it
+  home: http://{{ server_hostname }}
+  siteurl: http://{{ server_hostname }}
   blogname: hookii
   admin_email: wordpress@hookii.org
   usp_email_from: wordpress@hookii.org
 
-legacy_account_last_id: 48546
+legacy_account_last_id: 57516
 disqus_legacy_shortname: icommentidelpost
 disqus_new_shortname: hookii
 
