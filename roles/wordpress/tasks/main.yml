@@ -49,7 +49,7 @@
     dest: '{{ wp_root }}/wp-content/themes/compost/comments.php'
     owner: '{{ wp_root_user }}'
     group: '{{ wp_root_group }}'
-    mode: u=rw,g=r,o=
+    mode: u=rw,g=r,o=r
 
 - name: Copy functions.php
   template:
@@ -57,7 +57,7 @@
     dest: '{{ wp_root }}/wp-content/themes/compost/functions.php'
     owner: '{{ wp_root_user }}'
     group: '{{ wp_root_group }}'
-    mode: u=rw,g=r,o=
+    mode: u=rw,g=r,o=r
 
 - name: Copy User Submitted Posts custom form
   copy:
@@ -72,8 +72,13 @@
     dest: '{{ wp_root }}'
     owner: '{{ wp_root_user }}'
     group: '{{ wp_root_group }}'
-    mode: u=rwx,g=rx,o=
+    mode: u=rw,g=r,o=r
     recurse: yes
+
+- name: Permissions for wp-config.php
+  file:
+    path: '{{ wp_root }}/wp-config.php'
+    mode: u=rw,g=r,o=
 
 - name: Permissions for uploads directory content
   file:

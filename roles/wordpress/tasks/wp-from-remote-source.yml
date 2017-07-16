@@ -1,10 +1,49 @@
 ---
-- name: Extract wordpress files
-  unarchive:
-    src: '{{ dumps_dir }}/wordpress.tar.gz'
-    dest: '{{ wp_root }}'
+- name: Create SSH key
+  user:
+    name: '{{ ansible_user }}'
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_file: .ssh/id_rsa
 
-- name: Copy database dump file
-  copy:
-    src: '{{ dumps_dir }}/wordpress.sql.gz'
-    dest: /tmp
+- name: Read public key
+  slurp:
+    src: ~/.ssh/id_rsa.pub
+  register: pubkey
+
+- name: Set authorized key in source server
+  authorized_key:
+    user: root
+    state: present
+    key: '{{ pubkey.content | b64decode }}'
+    key_options: 'command="rsync --server --sender -logDtpre.iLsfx . {{ wp_old_root }}/",no-pty,no-agent-forwarding,no-port-forwarding'
+  become: yes
+  become_method: sudo
+  delegate_to: source
+
+- name: Dump Wordpress database in source server
+  mysql_db:
+    state: dump
+    name: wordpress
+    target: '{{ wp_old_root }}/wordpress.sql.gz'
+    login_user: '{{ wp_db_old_user }}'
+    login_password: '{{ wp_db_old_password }}'
+  delegate_to: source
+
+- name: Rsync Wordpress files from source server
+  command: >
+    rsync -a --delete
+    --exclude=wp-content/uploads/wp-clone
+    --exclude=wp-content/updraft
+    --exclude=wp-snapshots
+    root@{{ hostvars['source']['ansible_host'] }}:{{ wp_old_root }}/
+    {{ wp_root }}
+
+- name: Move SQL dump to /tmp
+  command: mv {{ wp_root }}/wordpress.sql.gz /tmp
+
+- name: Delete SQL dump from source server
+  file:
+    path: '{{ wp_old_root }}/wordpress.sql.gz'
+    state: absent
+  delegate_to: source
