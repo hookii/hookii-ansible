@@ -1,4 +1,6 @@
 <?php
+if ( 'publish' == $post->post_status && comments_open() ) :
+
 $shortname = hookii_postid_to_shortname( $post->ID );
 $url = get_permalink();
 $identifier = $post->ID . ' ' . $post->guid;
@@ -7,8 +9,6 @@ $DISQUS_ALLOWED_HTML = '<b><u><i><h1><h2><h3><code><blockquote><br><hr>';
 $title = get_the_title( $post );
 $title = json_encode( strip_tags( $title, $DISQUS_ALLOWED_HTML ) );
 ?>
-
-<?php if (comments_open() ) : ?>
 <div id="disqus_thread"></div>
 <script>
     var disqus_config = function () {
